@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 import os
-import base64  # FIXED: was imported inside loop, now at module level
+import base64  
 import requests
 from groq import Groq
 from azure.ai.inference import ChatCompletionsClient
@@ -24,6 +25,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from fastapi.responses import FileResponse
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse("index.html")
 
 # Groq client — fast per-file analysis (Steps 2 & 3)
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -36,7 +42,7 @@ foundry_client = ChatCompletionsClient(
 )
 
 
-# ─── EXISTING DEVELOPER TOOLS ─────────────────────────────────────────────────
+
 
 class CodeInput(BaseModel):
     code: str
@@ -155,7 +161,7 @@ Description:"""
     return {"commit": response.choices[0].message.content}
 
 
-# ─── HACKATHON: DEVMIND AI AGENT (REASONING AGENTS TRACK) ────────────────────
+
 
 class RepoInput(BaseModel):
     repo_url: str
