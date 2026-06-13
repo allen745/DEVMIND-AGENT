@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DevMind AI Agent</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #0078d4, #50e6ff);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .logo h1 { font-size: 1.4rem; font-weight: 700; color: #0078d4; }
+    .logo span { font-size: 0.75rem; color: #888; display: block; }
+    .badge {
+      background: #0078d4;
+      color: #fff;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ── NAV TABS ── */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 1rem 1.2rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #666;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #0078d4; background: #f0f7ff; }
+    .tab.active { color: #0078d4; border-bottom-color: #0078d4; font-weight: 600; }
+    .tab-icon { margin-right: 0.4rem; }
+
+    /* ── MAIN ── */
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    .tool-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border: 1px solid #e8ecf0;
+    }
+
+    .tool-header { margin-bottom: 1.5rem; }
+    .tool-header h2 { font-size: 1.3rem; color: #1a1a2e; font-weight: 700; }
+    .tool-header p { color: #666; font-size: 0.9rem; margin-top: 0.3rem; }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 0.4rem;
+    }
+
+    textarea, input[type="text"], select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.875rem;
+      background: #fafafa;
+      color: #1a1a2e;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    textarea:focus, input[type="text"]:focus {
+      border-color: #0078d4;
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 200px; line-height: 1.6; }
+
+    .row { display: flex; gap: 1rem; margin-top: 1rem; align-items: flex-end; flex-wrap: wrap; }
+
+    .field { flex: 1; min-width: 150px; }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #0078d4;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #006bbf; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,120,212,0.3); }
+    .btn-primary:disabled { background: #b0c8e8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── AGENT SPECIAL ── */
+    .agent-hero {
+      background: linear-gradient(135deg, #0078d4 0%, #50e6ff 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+    }
+    .agent-hero h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .agent-hero p { font-size: 0.85rem; opacity: 0.9; }
+    .pipeline {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .pipeline-step {
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ── RESULTS ── */
+    .result-box {
+      margin-top: 1.5rem;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+    }
+    .result-header {
+      background: #f5f7fa;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .result-header span { font-size: 0.85rem; font-weight: 600; color: #444; }
+    .copy-btn {
+      background: #0078d4;
+      color: #fff;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .copy-btn:hover { background: #006bbf; }
+    .result-content {
+      padding: 1.25rem;
+      background: #fff;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: #333;
+      white-space: pre-wrap;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    /* ── AGENT REPORT ── */
+    .report-section {
+      margin-top: 1.5rem;
+    }
+    .report-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .report-card-header {
+      background: #f5f7fa;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #444;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .report-card-body {
+      padding: 1rem;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    .score-badge {
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 1rem 0;
+    }
+    .score-high { background: #e6f9f0; color: #0a7a45; border: 2px solid #0a7a45; }
+    .score-mid { background: #fff8e6; color: #b37400; border: 2px solid #b37400; }
+    .score-low { background: #fde8e8; color: #c0392b; border: 2px solid #c0392b; }
+
+    .file-chip {
+      display: inline-block;
+      background: #f0f7ff;
+      color: #0078d4;
+      border: 1px solid #c8dff5;
+      border-radius: 6px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-family: monospace;
+      margin: 0.2rem;
+    }
+
+    /* ── LOADING ── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+    .loading.show { display: block; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #0078d4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: #666; font-size: 0.9rem; }
+    .loading .step { color: #0078d4; font-weight: 600; margin-top: 0.5rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-size: 0.8rem;
+      margin-top: 3rem;
+    }
+    footer strong { color: #0078d4; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 600px) {
+      header { padding: 1rem; }
+      main { padding: 0 1rem; }
+      .tool-card { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div>
+      <h1>DevMind AI Agent</h1>
+      <span>Intelligent Developer Tools</span>
+    </div>
+  </div>
+  <div class="badge">🏆 Microsoft Agents League 2026</div>
+</header>
+
+<!-- NAV TABS -->
+<nav>
+  <div class="tab active" onclick="switchTab('agent')"><span class="tab-icon">🤖</span>Repo Agent</div>
+  <div class="tab" onclick="switchTab('review')"><span class="tab-icon">🔍</span>Code Review</div>
+  <div class="tab" onclick="switchTab('bughunt')"><span class="tab-icon">🐛</span>Bug Hunt</div>
+  <div class="tab" onclick="switchTab('devdocs')"><span class="tab-icon">📚</span>Dev Docs</div>
+  <div class="tab" onclick="switchTab('complexity')"><span class="tab-icon">⚡</span>Complexity</div>
+  <div class="tab" onclick="switchTab('commit')"><span class="tab-icon">🔀</span>Git Commit</div>
+</nav>
+
+<main>
+
+  <!-- ── REPO AGENT TAB ── -->
+  <div id="tab-agent" class="tool-card">
+    <div class="agent-hero">
+      <h3>🤖 Repository Intelligence Agent</h3>
+      <p>Paste any public GitHub repo URL. The agent autonomously fetches all code files, analyzes each one, cross-references patterns, and generates a comprehensive Project Health Report — powered by Microsoft Foundry IQ.</p>
+      <div class="pipeline">
+        <span class="pipeline-step">Step 1 — GitHub API</span>
+        <span class="pipeline-step">Step 2 — Per-file Analysis</span>
+        <span class="pipeline-step">Step 3 — Cross-reference</span>
+        <span class="pipeline-step">Step 4 — Foundry IQ Report</span>
+      </div>
+    </div>
+
+    <div class="tool-header">
+      <h2>Analyze Repository</h2>
+      <p>Works with any public GitHub repository</p>
+    </div>
+
+    <label>GitHub Repository URL</label>
+    <input type="text" id="repoUrl" placeholder="https://github.com/owner/repo" />
+
+    <div style="margin-top: 1rem;">
+      <button class="btn btn-primary" onclick="analyzeRepo()" id="agentBtn">🤖 Analyze Repository</button>
+    </div>
+
+    <div class="loading" id="agentLoading">
+      <div class="spinner"></div>
+      <p>Agent is working...</p>
+      <div class="step" id="agentStep">Step 1: Fetching repository files...</div>
+    </div>
+
+    <div id="agentResult"></div>
+  </div>
+
+  <!-- ── CODE REVIEW TAB ── -->
+  <div id="tab-review" class="tool-card" style="display:none">
+    <div class="tool-header">
+      <h2>🔍 Code Review</h2>
+      <p>AI reviews your code, finds bugs, security issues and gives a quality score out of 100</p>
+    </div>
+    <label>Paste Your Code</label>
+    <textarea id="reviewCode" placeholder="Paste your code here..."></textarea>
+    <div class="row">
+      <div class="field">
+        <label>Language</label>
+        <select id="reviewLang">
+          <option>python</option><option>javascript</option><option>java</option>
+          <option>c++</option><option>html</option><option>css</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="callTool('review')">🔍 Review Code</button>
+    </div>
+    <div class="loading" id="reviewLoading"><div class="spinner"></div><p>Reviewing your code...</p></div>
+    <div id="reviewResult"></div>
+  </div>
+
+  <!-- ── BUG HUNT TAB ── -->
+  <div id="tab-bughunt" class="tool-card" style="display:none">
+    <div class="tool-header">
+      <h2>🐛 Bug Hunt</h2>
+      <p>Paste your error message and code — AI finds the root cause and provides the fix</p>
+    </div>
+    <label>Error Message</label>
+    <textarea id="bugError" placeholder="Paste your error message here..." style="min-height:80px"></textarea>
+    <div style="margin-top:1rem">
+      <label>Your Code (Optional)</label>
+      <textarea id="bugCode" placeholder="Paste your code here..."></textarea>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Language</label>
+        <select id="bugLang">
+          <option>python</option><option>javascript</option><option>java</option>
+          <option>c++</option><option>html</option><option>css</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="callTool('bughunt')">🐛 Hunt Bug</button>
+    </div>
+    <div class="loading" id="bughuntLoading"><div class="spinner"></div><p>Hunting the bug...</p></div>
+    <div id="bughuntResult"></div>
+  </div>
+
+  <!-- ── DEV DOCS TAB ── -->
+  <div id="tab-devdocs" class="tool-card" style="display:none">
+    <div class="tool-header">
+      <h2>📚 Dev Docs</h2>
+      <p>Generate README, API docs, or inline comments for your code</p>
+    </div>
+    <label>Paste Your Code</label>
+    <textarea id="docsCode" placeholder="Paste your code here..."></textarea>
+    <div class="row">
+      <div class="field">
+        <label>Language</label>
+        <select id="docsLang">
+          <option>python</option><option>javascript</option><option>java</option>
+          <option>c++</option><option>html</option><option>css</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Doc Type</label>
+        <select id="docType">
+          <option value="readme">README</option>
+          <option value="api">API Docs</option>
+          <option value="comments">Inline Comments</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="callTool('devdocs')">📚 Generate Docs</button>
+    </div>
+    <div class="loading" id="devdocsLoading"><div class="spinner"></div><p>Generating documentation...</p></div>
+    <div id="devdocsResult"></div>
+  </div>
+
+  <!-- ── COMPLEXITY TAB ── -->
+  <div id="tab-complexity" class="tool-card" style="display:none">
+    <div class="tool-header">
+      <h2>⚡ Complexity Analysis</h2>
+      <p>Analyze time and space complexity with optimization suggestions</p>
+    </div>
+    <label>Paste Your Code</label>
+    <textarea id="complexCode" placeholder="Paste your code here..."></textarea>
+    <div class="row">
+      <div class="field">
+        <label>Language</label>
+        <select id="complexLang">
+          <option>python</option><option>javascript</option><option>java</option>
+          <option>c++</option><option>html</option><option>css</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="callTool('complexity')">⚡ Analyze</button>
+    </div>
+    <div class="loading" id="complexityLoading"><div class="spinner"></div><p>Analyzing complexity...</p></div>
+    <div id="complexityResult"></div>
+  </div>
+
+  <!-- ── GIT COMMIT TAB ── -->
+  <div id="tab-commit" class="tool-card" style="display:none">
+    <div class="tool-header">
+      <h2>🔀 Git Commit Generator</h2>
+      <p>Generate conventional commit messages from your code changes</p>
+    </div>
+    <label>Paste Your Code</label>
+    <textarea id="commitCode" placeholder="Paste your code here..."></textarea>
+    <div class="row">
+      <div class="field">
+        <label>Language</label>
+        <select id="commitLang">
+          <option>python</option><option>javascript</option><option>java</option>
+          <option>c++</option><option>html</option><option>css</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="callTool('commit')">🔀 Generate Commit</button>
+    </div>
+    <div class="loading" id="commitLoading"><div class="spinner"></div><p>Generating commit message...</p></div>
+    <div id="commitResult"></div>
+  </div>
+
+</main>
+
+<footer>
+  <p>🧠 <strong>DevMind AI Agent</strong> </p>
+  <p style="margin-top:0.3rem">Track: Reasoning Agents • Microsoft IQ: Foundry IQ • Built by Allen Christian, ADIT</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = "http://localhost:8000";
+
+  // ── TAB SWITCHING ──
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+    document.getElementById('tab-' + name).style.display = 'block';
+    event.target.closest('.tab').classList.add('active');
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ── RESULT BOX ──
+  function showResult(containerId, text) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = `
+      <div class="result-box">
+        <div class="result-header">
+          <span>✅ Analysis Complete</span>
+          <button class="copy-btn" onclick="copyText(\`${text.replace(/`/g, '\\`')}\`)">📋 Copy</button>
+        </div>
+        <div class="result-content">${escapeHtml(text)}</div>
+      </div>`;
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text);
+    showToast('✅ Copied!');
+  }
+
+  // ── STANDARD TOOLS ──
+  async function callTool(tool) {
+    const configs = {
+      review:     { endpoint: '/review',     body: () => ({ code: document.getElementById('reviewCode').value,   language: document.getElementById('reviewLang').value }),     key: 'review' },
+      bughunt:    { endpoint: '/bughunt',    body: () => ({ error: document.getElementById('bugError').value,    code: document.getElementById('bugCode').value, language: document.getElementById('bugLang').value }), key: 'solution' },
+      devdocs:    { endpoint: '/devdocs',    body: () => ({ code: document.getElementById('docsCode').value,     language: document.getElementById('docsLang').value, doc_type: document.getElementById('docType').value }), key: 'documentation' },
+      complexity: { endpoint: '/complexity', body: () => ({ code: document.getElementById('complexCode').value,  language: document.getElementById('complexLang').value }), key: 'complexity' },
+      commit:     { endpoint: '/commit',     body: () => ({ code: document.getElementById('commitCode').value,   language: document.getElementById('commitLang').value }), key: 'commit' },
+    };
+
+    const cfg = configs[tool];
+    const loadingEl = document.getElementById(tool + 'Loading');
+    const resultEl  = document.getElementById(tool + 'Result');
+
+    loadingEl.classList.add('show');
+    resultEl.innerHTML = '';
+
+    try {
+      const res = await fetch(API + cfg.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg.body())
+      });
+      const data = await res.json();
+      showResult(tool + 'Result', data[cfg.key] || JSON.stringify(data, null, 2));
+    } catch (e) {
+      resultEl.innerHTML = `<div class="result-box"><div class="result-content" style="color:#c0392b">❌ Error: ${e.message}. Make sure the backend is running on ${API}</div></div>`;
+    } finally {
+      loadingEl.classList.remove('show');
+    }
+  }
+
+  // ── REPO AGENT ──
+  async function analyzeRepo() {
+    const repoUrl = document.getElementById('repoUrl').value.trim();
+    if (!repoUrl) { showToast('Please enter a GitHub repo URL'); return; }
+
+    const btn      = document.getElementById('agentBtn');
+    const loading  = document.getElementById('agentLoading');
+    const stepEl   = document.getElementById('agentStep');
+    const resultEl = document.getElementById('agentResult');
+
+    btn.disabled = true;
+    loading.classList.add('show');
+    resultEl.innerHTML = '';
+
+    const steps = [
+      'Step 1: Fetching repository files via GitHub API...',
+      'Step 2: Analyzing each file individually...',
+      'Step 3: Cross-referencing issues across files...',
+      'Step 4: Microsoft Foundry IQ generating final report...',
+    ];
+    let stepIdx = 0;
+    const stepInterval = setInterval(() => {
+      if (stepIdx < steps.length) stepEl.textContent = steps[stepIdx++];
+    }, 4000);
+
+    try {
+      const res = await fetch(API + '/agent/analyze-repo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_url: repoUrl })
+      });
+      const data = await res.json();
+      clearInterval(stepInterval);
+
+      if (data.error) {
+        resultEl.innerHTML = `<div class="result-box"><div class="result-content" style="color:#c0392b">❌ ${data.error}</div></div>`;
+        return;
+      }
+
+      // Extract health score
+      const scoreMatch = data.project_health_report.match(/(\d+)\s*\/\s*100/);
+      const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+      const scoreClass = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+
+      // Files analyzed
+      const fileChips = data.file_analyses.map(f =>
+        `<span class="file-chip">${f.path}</span>`
+      ).join('');
+
+      resultEl.innerHTML = `
+        <div class="report-section">
+
+          <!-- Summary card -->
+          <div class="report-card">
+            <div class="report-card-header">📊 Analysis Summary</div>
+            <div class="report-card-body">
+              <strong>Repository:</strong> ${data.repo}<br/>
+              <strong>Files Analyzed:</strong> ${data.files_analyzed}<br/>
+              <strong>Intelligence Layer:</strong> ${data.intelligence_layer}<br/>
+              ${score !== null ? `<br/><strong>Health Score:</strong> <span class="score-badge ${scoreClass}">${score}/100</span>` : ''}
+              <br/><strong>Files:</strong><br/>${fileChips}
+            </div>
+          </div>
+
+          <!-- Pipeline card -->
+          <div class="report-card">
+            <div class="report-card-header" onclick="toggleCard(this)">⚙️ Reasoning Pipeline <span>▼</span></div>
+            <div class="report-card-body">
+              ${data.pipeline.map(s => `• ${s}`).join('<br/>')}
+            </div>
+          </div>
+
+          <!-- Cross reference -->
+          <div class="report-card">
+            <div class="report-card-header" onclick="toggleCard(this)">🔗 Cross-File Pattern Analysis <span>▼</span></div>
+            <div class="report-card-body">${escapeHtml(data.cross_reference_insights)}</div>
+          </div>
+
+          <!-- Full report -->
+          <div class="report-card">
+            <div class="report-card-header">
+              📋 Project Health Report
+              <button class="copy-btn" onclick="copyText(\`${(data.project_health_report||'').replace(/`/g,'\\`')}\`)">📋 Copy Report</button>
+            </div>
+            <div class="report-card-body">${escapeHtml(data.project_health_report)}</div>
+          </div>
+
+          <!-- Individual files -->
+          <div class="report-card">
+            <div class="report-card-header" onclick="toggleCard(this)">📁 Individual File Analyses <span>▼</span></div>
+            <div class="report-card-body">
+              ${data.file_analyses.map(f => `
+                <div style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #f0f0f0;">
+                  <span class="file-chip">${f.path}</span>
+                  <div style="margin-top:0.5rem; white-space:pre-wrap;">${escapeHtml(f.analysis)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+        </div>`;
+
+    } catch (e) {
+      clearInterval(stepInterval);
+      resultEl.innerHTML = `<div class="result-box"><div class="result-content" style="color:#c0392b">❌ Error: ${e.message}. Make sure backend is running on ${API}</div></div>`;
+    } finally {
+      loading.classList.remove('show');
+      btn.disabled = false;
+    }
+  }
+
+  function toggleCard(header) {
+    const body = header.nextElementSibling;
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    header.querySelector('span').textContent = body.style.display === 'none' ? '▶' : '▼';
+  }
+</script>
+</body>
+</html>
+HTMLEOF
