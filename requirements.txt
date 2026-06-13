@@ -1,5 +1,8 @@
 fastapi
 uvicorn
-groq
-requests
+pydantic
 python-dotenv
+requests
+groq
+azure-ai-inference
+azure-core
