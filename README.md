@@ -4,7 +4,7 @@
 
 **🏆 Microsoft Agents League Hackathon 2026 — Reasoning Agents Track**
 
-🔗 **[Live Demo](https://devmind-agent.onrender.com)** | Track: Reasoning Agents | Microsoft IQ: Foundry IQ
+🔗 **[Live Demo](https://devmind-agent.onrender.com)** | https://devmind-agent.onrender.com/  |Track: Reasoning Agents | Microsoft IQ: Foundry IQ
 
 ---
 
