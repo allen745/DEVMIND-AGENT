@@ -174,11 +174,18 @@ def get_repo_files(owner: str, repo: str, token: str = "") -> list:
     if token:
         headers["Authorization"] = f"token {token}"
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1"
-    response = requests.get(url, headers=headers)
-
-    if response.status_code != 200:
+    commits_res = requests.get(
+        f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=1",
+        headers=headers
+    )
+    if commits_res.status_code != 200:
         return []
+    tree_sha = commits_res.json()[0]['commit']['tree']['sha']
+    url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1"
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+       return []
+
 
     tree = response.json().get("tree", [])
 
