@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.staticfiles import StaticFiles
 import os
 import base64  
 import requests
@@ -49,14 +48,6 @@ class CodeInput(BaseModel):
     language: str = "python"
 
 
-@app.get("/")
-def home():
-    return {
-        "message": "DevMind AI is Live! 🚀",
-        "hackathon": "Microsoft Agents League 2026",
-        "track": "Reasoning Agents",
-        "microsoft_iq": "Foundry IQ — Azure AI Inference (GitHub Models / GPT-4o)"
-    }
 
 
 @app.post("/review")
@@ -172,30 +163,39 @@ def get_repo_files(owner: str, repo: str, token: str = "") -> list:
     """Step 1: Fetch code files from a public GitHub repository via GitHub API."""
     headers = {"Accept": "application/vnd.github.v3+json"}
     if token:
-        headers["Authorization"] = f"token {token}"
+        headers["Authorization"] = f"Bearer {token}"
 
     repo_res = requests.get(
         f"https://api.github.com/repos/{owner}/{repo}",
         headers=headers
     )
+    print("REPO STATUS:", repo_res.status_code)
     if repo_res.status_code != 200:
        return []
     default_branch = repo_res.json()["default_branch"]
+    print("DEFAULT BRANCH:", default_branch)
     branch_res = requests.get(
          f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
          headers=headers
     )
+    print("BRANCH STATUS:", branch_res.status_code)
     if branch_res.status_code != 200:
         return []
 
     tree_sha = branch_res.json()["commit"]["commit"]["tree"]["sha"]
+    print("TREE SHA:", tree_sha)
     url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1"
     response = requests.get(url, headers=headers)
+    print("TREE STATUS:", response.status_code)
     if response.status_code != 200:
        return []
 
 
     tree = response.json().get("tree", [])
+    print("TREE ITEMS:", len(tree))
+    print("ALL FILES IN REPO:")
+    for item in tree[:50]:
+        print(item.get("path"))
 
     allowed_extensions = ['.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.html', '.css']
     code_files = [
@@ -204,6 +204,9 @@ def get_repo_files(owner: str, repo: str, token: str = "") -> list:
         and any(f['path'].endswith(ext) for ext in allowed_extensions)
         and f.get('size', 0) < 50000
     ]
+    print("CODE FILES FOUND:", len(code_files))
+    for f in code_files:
+        print(f["path"])
 
     files_content = []
     for file in code_files[:10]:
