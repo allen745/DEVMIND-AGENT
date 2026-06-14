@@ -174,13 +174,21 @@ def get_repo_files(owner: str, repo: str, token: str = "") -> list:
     if token:
         headers["Authorization"] = f"token {token}"
 
-    commits_res = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=1",
+    repo_res = requests.get(
+        f"https://api.github.com/repos/{owner}/{repo}",
         headers=headers
     )
-    if commits_res.status_code != 200:
+    if repo_res.status_code != 200:
+       return []
+    default_branch = repo_res.json()["default_branch"]
+    branch_res = requests.get(
+         f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
+         headers=headers
+    )
+    if branch_res.status_code != 200:
         return []
-    tree_sha = commits_res.json()[0]['commit']['tree']['sha']
+
+    tree_sha = branch_res.json()["commit"]["commit"]["tree"]["sha"]
     url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
@@ -370,6 +378,9 @@ def analyze_repo(input: RepoInput):
 
         # Step 1: Fetch code files via GitHub API
         files = get_repo_files(owner, repo, input.github_token)
+        print("FILES FOUND:", len(files))
+        print("FILES:", files)
+
         if not files:
             return {"error": "No code files found. Make sure the repository is public and non-empty."}
 
