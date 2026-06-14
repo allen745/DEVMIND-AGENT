@@ -58,8 +58,7 @@ The dual-model architecture is intentional: Groq/Llama handles fast parallel fil
 
 ## Architecture Diagram
 
-![DevMind AI Agent Architecture](architecture.svg)
-
+![DevMind AI Agent Architecture](architecture.png)
 ## Tech Stack
 
 | Layer | Technology |
