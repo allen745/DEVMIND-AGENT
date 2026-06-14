@@ -6,6 +6,12 @@
 
 🔗 **[Live Demo](https://devmind-agent.onrender.com)** | https://devmind-agent.onrender.com/  |Track: Reasoning Agents | Microsoft IQ: Foundry IQ
 
+## 🎥 Demo Video
+
+Watch the full demo here:
+
+https://www.youtube.com/watch?v=uny7i4pHSk8
+
 ---
 
 ## What It Does
