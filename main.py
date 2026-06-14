@@ -410,7 +410,12 @@ def analyze_repo(input: RepoInput):
         repo_name = f"{owner}/{repo}"
 
         # Step 1: Fetch code files via GitHub API
-        files = get_repo_files(owner, repo, input.github_token)
+        print("TOKEN EXISTS:", bool(os.getenv("GITHUB_TOKEN")))
+        files = get_repo_files(
+                owner,
+                repo,
+                os.getenv("GITHUB_TOKEN", "")
+        )
         print("FILES FOUND:", len(files))
         print("FILES:", files)
 
