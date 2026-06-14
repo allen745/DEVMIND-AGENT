@@ -160,71 +160,101 @@ class RepoInput(BaseModel):
 
 
 def get_repo_files(owner: str, repo: str, token: str = "") -> list:
-    """Step 1: Fetch code files from a public GitHub repository via GitHub API."""
-    headers = {"Accept": "application/vnd.github.v3+json"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "DevMind-AI"
+    }
+
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    repo_res = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}",
-        headers=headers
-    )
-    print("REPO STATUS:", repo_res.status_code)
-    if repo_res.status_code != 200:
-       return []
-    default_branch = repo_res.json()["default_branch"]
-    print("DEFAULT BRANCH:", default_branch)
-    branch_res = requests.get(
-         f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
-         headers=headers
-    )
-    print("BRANCH STATUS:", branch_res.status_code)
-    if branch_res.status_code != 200:
+    try:
+        # Get repository
+        repo_url = f"https://api.github.com/repos/{owner}/{repo}"
+        repo_res = requests.get(repo_url, headers=headers)
+
+        print("REPO STATUS:", repo_res.status_code)
+
+        if repo_res.status_code != 200:
+            print(repo_res.text)
+            return []
+
+        default_branch = repo_res.json().get("default_branch", "main")
+        print("DEFAULT BRANCH:", default_branch)
+
+        # Get full tree
+        tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1"
+        tree_res = requests.get(tree_url, headers=headers)
+
+        print("TREE STATUS:", tree_res.status_code)
+
+        if tree_res.status_code != 200:
+            print(tree_res.text)
+            return []
+
+        tree = tree_res.json().get("tree", [])
+
+        print("TREE ITEMS:", len(tree))
+
+        allowed_extensions = (
+            ".py",
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".java",
+            ".cpp",
+            ".c",
+            ".html",
+            ".css",
+        )
+
+        code_files = []
+
+        for item in tree:
+            if item.get("type") != "blob":
+                continue
+
+            path = item.get("path", "")
+
+            if path.lower().endswith(allowed_extensions):
+                code_files.append(path)
+
+        print("CODE FILES:", code_files)
+
+        files_content = []
+
+        for path in code_files[:20]:
+            content_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+            content_res = requests.get(content_url, headers=headers)
+
+            print(f"FETCHING {path}:", content_res.status_code)
+
+            if content_res.status_code != 200:
+                continue
+
+            data = content_res.json()
+
+            try:
+                content = base64.b64decode(
+                    data["content"]
+                ).decode("utf-8", errors="ignore")
+
+                files_content.append({
+                    "path": path,
+                    "content": content[:3000]
+                })
+
+            except Exception as e:
+                print("DECODE ERROR:", path, str(e))
+
+        print("FILES RETURNED:", len(files_content))
+
+        return files_content
+
+    except Exception as e:
+        print("GET_REPO_FILES ERROR:", str(e))
         return []
-
-    tree_sha = branch_res.json()["commit"]["commit"]["tree"]["sha"]
-    print("TREE SHA:", tree_sha)
-    url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1"
-    response = requests.get(url, headers=headers)
-    print("TREE STATUS:", response.status_code)
-    if response.status_code != 200:
-       return []
-
-
-    tree = response.json().get("tree", [])
-    print("TREE ITEMS:", len(tree))
-    print("ALL FILES IN REPO:")
-    for item in tree[:50]:
-        print(item.get("path"))
-
-    allowed_extensions = ['.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.html', '.css']
-    code_files = [
-        f for f in tree
-        if f['type'] == 'blob'
-        and any(f['path'].endswith(ext) for ext in allowed_extensions)
-        and f.get('size', 0) < 50000
-    ]
-    print("CODE FILES FOUND:", len(code_files))
-    for f in code_files:
-        print(f["path"])
-
-    files_content = []
-    for file in code_files[:10]:
-        file_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file['path']}"
-        file_response = requests.get(file_url, headers=headers)
-        if file_response.status_code == 200:
-            content_data = file_response.json()
-            if content_data.get('encoding') == 'base64':
-                try:
-                    content = base64.b64decode(content_data['content']).decode('utf-8', errors='ignore')
-                    files_content.append({
-                        "path": file['path'],
-                        "content": content[:3000]
-                    })
-                except Exception:
-                    pass
-
-    return files_content
 
 
 def analyze_file(file_path: str, content: str) -> str:
@@ -385,7 +415,14 @@ def analyze_repo(input: RepoInput):
         print("FILES:", files)
 
         if not files:
-            return {"error": "No code files found. Make sure the repository is public and non-empty."}
+            return {
+                "error": "No code files found",
+                "repo": repo_name,
+                "owner": owner,
+                "repository": repo,
+                "github_token_provided": bool(input.github_token),
+                "debug": "Check Modal logs for REPO STATUS, TREE STATUS, CODE FILES, FILES RETURNED"
+            }
 
         # Step 2: Analyze each file individually (fast Groq inference)
         file_analyses = []
