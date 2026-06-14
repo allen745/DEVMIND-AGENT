@@ -1,113 +1,149 @@
-# 🚀 DevMind AI Agent
+# DevMind AI Agent 🧠
 
-AI-powered multi-step repository intelligence system built for the **Microsoft Agents League Hackathon 2026**.
+> Multi-step AI reasoning agent for GitHub repository health analysis, powered by Microsoft Foundry IQ.
 
----
+**🏆 Microsoft Agents League Hackathon 2026 — Reasoning Agents Track**
 
-## 🧠 Overview
-
-DevMind AI Agent is a **reasoning-based developer intelligence system** that analyzes entire GitHub repositories and generates a structured **Project Health Report**.
-
-It uses a multi-stage AI pipeline:
-
-- ⚡ Fast per-file analysis (Groq / Llama-3.3-70B)
-- 🔍 Cross-file reasoning and pattern detection
-- 🧠 Microsoft Foundry IQ final synthesis (Azure AI Inference / GitHub Models)
-
-The system transforms raw code into **actionable engineering intelligence**.
+🔗 **[Live Demo](https://devmind-agent.onrender.com)** | Track: Reasoning Agents | Microsoft IQ: Foundry IQ
 
 ---
 
-## 🏗️ Architecture
+## What It Does
 
-### 4-Step AI Pipeline
+DevMind AI Agent takes any public GitHub repository URL and runs a 4-step intelligent analysis pipeline — autonomously fetching files, analyzing each one, cross-referencing issues across the codebase, and generating a grounded Project Health Report via Microsoft Foundry IQ.
 
-**Step 1: Repository Ingestion**
-- GitHub API fetches repository files
-- Filters supported programming languages
-- Limits file size for efficiency
+## The 4-Step Reasoning Pipeline
 
-**Step 2: Per-File Analysis (Groq)**
-- Bug detection
-- Security vulnerability analysis
-- Code quality evaluation
+```
+GitHub URL
+    │
+    ▼
+Step 1 — GitHub API
+    Parses the URL, resolves the default branch,
+    fetches up to 10 code files via GitHub REST API
+    │
+    ▼
+Step 2 — Groq / Llama-3.3-70b  (fast per-file analysis)
+    Analyzes each file individually:
+    bugs, security issues, code quality, severity
+    │
+    ▼
+Step 3 — Groq / Llama-3.3-70b  (cross-file reasoning)
+    Identifies systemic patterns across all files:
+    recurring issues, inconsistencies, architecture concerns
+    │
+    ▼
+Step 4 — Microsoft Foundry IQ  ★ Required IQ Layer
+    Azure AI Inference endpoint (GitHub Models / GPT-4o)
+    Synthesizes grounded, cited Project Health Report
+    │
+    ▼
+Project Health Report
+    Overall health score (0-100), critical issues,
+    security vulnerabilities, top 5 recommended actions
+```
 
-**Step 3: Cross-File Reasoning**
-- Detects systemic issues across files
-- Finds inconsistent patterns
-- Identifies architecture-level problems
+## Microsoft IQ Integration
 
-**Step 4: Microsoft Foundry IQ Synthesis**
-- Uses GPT-4o via Azure AI Inference / GitHub Models
-- Produces grounded, structured final report
-- Reduces hallucinations with multi-step reasoning
+This project uses **Microsoft Foundry IQ** as the intelligence synthesis layer.
 
----
+| Detail | Value |
+|--------|-------|
+| IQ Layer | Foundry IQ |
+| Endpoint | `https://models.inference.ai.azure.com` (Azure AI Inference) |
+| Model | GPT-4o via GitHub Models |
+| Role | Grounded final synthesis — reduces hallucination by grounding on structured per-file evidence from Steps 2 & 3 |
 
-## ⚙️ Features
+The dual-model architecture is intentional: Groq/Llama handles fast parallel file analysis, while Foundry IQ handles the structured, cited final synthesis that requires higher reasoning quality.
 
-### Code Intelligence APIs
+## Architecture Diagram
 
-- `GET /` → Health check
-- `POST /review` → AI code review
-- `POST /bughunt` → Debugging assistant
-- `POST /devdocs` → Auto documentation generator
-- `POST /complexity` → Complexity analysis
-- `POST /commit` → Smart commit message generator
+![DevMind AI Agent Architecture](architecture.svg)
 
-### AI Agent Endpoint
+## Tech Stack
 
-- `POST /agent/analyze-repo`
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI (Python) |
+| Fast Analysis | Groq + Llama-3.3-70b-versatile |
+| **Microsoft IQ** | **Foundry IQ — Azure AI Inference (GitHub Models / GPT-4o)** |
+| Code Source | GitHub REST API |
+| Frontend | HTML + Vanilla JS |
+| Deployment | Render |
 
-Analyzes a full GitHub repository and returns:
+## Developer Tools (Additional Endpoints)
 
-- File-by-file AI analysis
-- Cross-file system insights
-- Security vulnerability report
-- Architecture evaluation
-- Overall health score (0–100)
-- Final executive report
+Beyond the agent, DevMind AI includes 5 standalone developer tools:
 
----
+| Tool | Endpoint | Description |
+|------|----------|-------------|
+| Code Review | `POST /review` | Review code, find bugs, score out of 100 |
+| Bug Hunt | `POST /bughunt` | Diagnose errors, get fixed code |
+| Dev Docs | `POST /devdocs` | Generate README, API docs, or comments |
+| Complexity | `POST /complexity` | Big-O analysis with optimized version |
+| Git Commit | `POST /commit` | Generate conventional commit messages |
 
-## 🧠 Microsoft IQ Integration
+## Quick Start
 
-This project integrates **Microsoft Foundry IQ** via:
-
-- Azure AI Inference endpoint (GPT-4o)
-- GitHub Models API
-- Grounded final reasoning layer
-
-### Benefits:
-- Reduced hallucination
-- Structured outputs
-- Evidence-based analysis
-- Enterprise-grade reasoning
-
----
-
-## 🏆 Hackathon Alignment
-
-Built for:
-
-🎯 **Microsoft Agents League Hackathon 2026**
-
-### Tracks:
-- 🧠 Reasoning Agents (Primary)
-- 💼 Enterprise AI Agents (Extension-ready)
-
-
-
-## 🚀 Run Locally
-
-### 1. Install dependencies
 ```bash
+git clone https://github.com/allen745/devmind-ai
+cd devmind-ai
 pip install -r requirements.txt
+```
 
+Create a `.env` file:
+```
+GROQ_API_KEY=your_groq_api_key
+GITHUB_TOKEN=your_github_personal_access_token
+```
+
+> The `GITHUB_TOKEN` is used for two purposes:
+> 1. Microsoft Foundry IQ access via Azure AI Inference (GitHub Models endpoint)
+> 2. Higher GitHub API rate limits when fetching repository files
+
+```bash
 uvicorn main:app --reload
+```
 
-http://127.0.0.1:8000/docs
+Open `http://localhost:8000` in your browser.
 
-GROQ_API_KEY=your_groq_key
-GITHUB_TOKEN=your_github_token
+## Agent API
 
+```bash
+curl -X POST https://devmind-agent.onrender.com/agent/analyze-repo \
+  -H "Content-Type: application/json" \
+  -d '{"repo_url": "https://github.com/owner/repo"}'
+```
+
+**Response:**
+```json
+{
+  "repo": "owner/repo",
+  "files_analyzed": 8,
+  "intelligence_layer": "Microsoft Foundry IQ — Azure AI Inference (GitHub Models / GPT-4o)",
+  "pipeline": ["Step 1: GitHub API", "Step 2: Groq/Llama", "Step 3: Cross-reference", "Step 4: Foundry IQ"],
+  "file_analyses": [...],
+  "cross_reference_insights": "...",
+  "project_health_report": "## OVERALL HEALTH SCORE: 72/100\n..."
+}
+```
+
+## Requirements
+
+```
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+groq
+azure-ai-inference
+azure-core
+```
+
+## Built By
+
+Allen Stivanson Christian | Patent Holder  — 2nd year AI & Data Science student, A.D. Patel Institute of Technology, India
+
+**Microsoft Agents League Hackathon 2026**
+Track: Reasoning Agents | Microsoft IQ: Foundry IQ | Target Awards: Best Reasoning Agent, Best Use of IQ Tools, Top Student Award
